@@ -1,7 +1,171 @@
 name: cera-production
 
-# Production uses the same application topology as staging. Database, Valkey,
-# Authentik and GlitchTip are attached through their approved production
-# overlays and private networks. Never add production secrets to this file.
-include:
-  - compose.staging.yaml
+services:
+  postgres:
+    image: postgres:17-alpine
+    env_file:
+      - ${POSTGRES_ENV_FILE:-/opt/cera/env/postgres.env}
+    environment:
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d postgres']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../postgres/init-production.sql:/docker-entrypoint-initdb.d/10-cera-databases.sql:ro
+    networks:
+      - backend
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    command:
+      - valkey-server
+      - --appendonly
+      - 'yes'
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - valkey-data:/data
+    networks:
+      - backend
+
+  web:
+    image: ${CERA_IMAGE_PREFIX:?required}/cera-web:${CERA_IMAGE_TAG:?required}
+    env_file:
+      - ${WEB_ENV_FILE:-/opt/cera/env/web.env}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+      - backend
+
+  cms:
+    image: ${CERA_IMAGE_PREFIX:?required}/cera-cms:${CERA_IMAGE_TAG:?required}
+    env_file:
+      - ${CMS_ENV_FILE:-/opt/cera/env/cms.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+      - backend
+
+  commerce:
+    image: ${CERA_IMAGE_PREFIX:?required}/cera-commerce:${CERA_IMAGE_TAG:?required}
+    command: ['node', 'apps/commerce/dist/index.js']
+    env_file:
+      - ${COMMERCE_ENV_FILE:-/opt/cera/env/commerce.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3002/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - commerce-assets:/app/apps/commerce/static/assets
+    networks:
+      - edge
+      - backend
+
+  commerce-worker:
+    image: ${CERA_IMAGE_PREFIX:?required}/cera-commerce:${CERA_IMAGE_TAG:?required}
+    command: ['node', 'apps/commerce/dist/worker.js']
+    env_file:
+      - ${COMMERCE_ENV_FILE:-/opt/cera/env/commerce.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - commerce-assets:/app/apps/commerce/static/assets
+    networks:
+      - backend
+
+  caddy:
+    image: caddy:2.10-alpine
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    depends_on:
+      - web
+      - cms
+      - commerce
+    environment:
+      CERA_DOMAIN: ${CERA_DOMAIN:?required}
+    ports:
+      - '80:80'
+      - '443:443'
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /config
+    volumes:
+      - ../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    networks:
+      - edge
+
+networks:
+  backend:
+    internal: true
+
+  edge:
+
+volumes:
+  postgres-data:
+  valkey-data:
+  commerce-assets:
+  caddy-data:
