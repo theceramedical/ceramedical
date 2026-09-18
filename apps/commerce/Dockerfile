@@ -1,4 +1,4 @@
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /workspace
 RUN corepack enable
 
@@ -13,7 +13,7 @@ COPY packages/contracts packages/contracts
 COPY packages/observability packages/observability
 RUN pnpm --filter @cera/commerce build
 
-FROM node:22-alpine AS runtime
+FROM node:26-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 RUN addgroup -S cera -g 1001 && adduser -S cera -u 1001 -G cera
