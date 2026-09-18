@@ -1,0 +1,11 @@
+# Replace these placeholder teams after the CERA GitHub organization is ready.
+/apps/web/                  @CERA_ORG/dev-1 @CERA_ORG/dev-3
+/apps/cms/                  @CERA_ORG/dev-1 @CERA_ORG/dev-3
+/apps/commerce/             @CERA_ORG/dev-2 @CERA_ORG/dev-3
+/packages/contracts/        @CERA_ORG/dev-1 @CERA_ORG/dev-2
+/packages/ui/               @CERA_ORG/dev-1
+/packages/observability/    @CERA_ORG/dev-2 @CERA_ORG/dev-3
+/infra/                     @CERA_ORG/dev-3 @CERA_ORG/dev-2
+/.github/workflows/         @CERA_ORG/dev-3
+/**/migrations/             @CERA_ORG/dev-2 @CERA_ORG/dev-3
+/docs/runbooks/             @CERA_ORG/dev-3

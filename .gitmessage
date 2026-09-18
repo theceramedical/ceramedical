@@ -1,0 +1,7 @@
+# <type>(<scope>): <specific result>
+#
+# Types: feat, fix, docs, style, refactor, test, chore, perf, ci, revert
+# Scopes: web, cms, catalogue, enquiry, auth, crm, email, infra, release
+#
+# Explain why in the body when the reason is not obvious.
+# Link the issue in the footer, for example: Closes #123

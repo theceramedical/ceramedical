@@ -1,0 +1,115 @@
+name: cera-staging
+
+services:
+  web:
+    image: ${CERA_IMAGE_PREFIX:?required}/cera-web:${CERA_IMAGE_TAG:?required}
+    env_file:
+      - ${WEB_ENV_FILE:-/opt/cera/env/web.env}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+      - backend
+
+  cms:
+    image: ${CERA_IMAGE_PREFIX:?required}/cera-cms:${CERA_IMAGE_TAG:?required}
+    env_file:
+      - ${CMS_ENV_FILE:-/opt/cera/env/cms.env}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+      - backend
+
+  commerce:
+    image: ${CERA_IMAGE_PREFIX:?required}/cera-commerce:${CERA_IMAGE_TAG:?required}
+    command: ['node', 'dist/index.js']
+    env_file:
+      - ${COMMERCE_ENV_FILE:-/opt/cera/env/commerce.env}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3002/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+      - backend
+
+  commerce-worker:
+    image: ${CERA_IMAGE_PREFIX:?required}/cera-commerce:${CERA_IMAGE_TAG:?required}
+    command: ['node', 'dist/worker.js']
+    env_file:
+      - ${COMMERCE_ENV_FILE:-/opt/cera/env/commerce.env}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+
+  caddy:
+    image: caddy:2.10-alpine
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    depends_on:
+      - cms
+      - commerce
+      - web
+    environment:
+      CERA_DOMAIN: ${CERA_DOMAIN:?required}
+    ports:
+      - '80:80'
+      - '443:443'
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /config
+    volumes:
+      - ../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    networks:
+      - edge
+
+networks:
+  backend:
+    internal: true
+  edge:
+
+volumes:
+  caddy-data:

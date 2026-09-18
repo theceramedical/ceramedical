@@ -1,0 +1,23 @@
+services:
+  authentik-server:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_IMAGE_TAG:?pin an approved version}
+    command: server
+    env_file:
+      - ${AUTHENTIK_ENV_FILE:-/opt/cera/env/authentik.env}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+      - backend
+
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:${AUTHENTIK_IMAGE_TAG:?pin an approved version}
+    command: worker
+    env_file:
+      - ${AUTHENTIK_ENV_FILE:-/opt/cera/env/authentik.env}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend

@@ -1,0 +1,34 @@
+{
+	email admin@{$CERA_DOMAIN}
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+{$CERA_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		-Server
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	handle_path /cms/* {
+		reverse_proxy cms:3001
+	}
+
+	handle_path /shop-api* {
+		reverse_proxy commerce:3002
+	}
+
+	handle_path /admin-api* {
+		reverse_proxy commerce:3002
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

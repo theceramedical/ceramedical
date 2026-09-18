@@ -1,0 +1,33 @@
+{
+  "name": "cera-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CERA Medical full-platform monorepo",
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": ">=22 <27",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev": "dotenv -e .env -- pnpm --parallel --filter @cera/web --filter @cera/cms --filter @cera/commerce run dev",
+    "dev:web": "dotenv -e .env -- pnpm --filter @cera/web dev",
+    "dev:cms": "dotenv -e .env -- pnpm --filter @cera/cms dev",
+    "dev:commerce": "dotenv -e .env -- pnpm --filter @cera/commerce dev",
+    "infra:up": "docker compose -f infra/compose/compose.local.yaml up -d",
+    "infra:down": "docker compose -f infra/compose/compose.local.yaml down",
+    "infra:logs": "docker compose -f infra/compose/compose.local.yaml logs -f",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm -r --if-present build",
+    "check": "pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
+    "prepare:local": "bash infra/scripts/setup-local.sh",
+    "smoke": "bash infra/scripts/smoke-test.sh"
+  },
+  "devDependencies": {
+    "dotenv-cli": "11.0.0",
+    "prettier": "3.6.2",
+    "typescript": "5.9.3"
+  }
+}

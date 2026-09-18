@@ -1,0 +1,23 @@
+services:
+  glitchtip-web:
+    image: glitchtip/glitchtip:${GLITCHTIP_IMAGE_TAG:?pin an approved version}
+    command: ./bin/run
+    env_file:
+      - ${GLITCHTIP_ENV_FILE:-/opt/cera/env/glitchtip.env}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - edge
+      - backend
+
+  glitchtip-worker:
+    image: glitchtip/glitchtip:${GLITCHTIP_IMAGE_TAG:?pin an approved version}
+    command: ./bin/run-celery-with-beat
+    env_file:
+      - ${GLITCHTIP_ENV_FILE:-/opt/cera/env/glitchtip.env}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend

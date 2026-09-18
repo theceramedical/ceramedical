@@ -1,0 +1,52 @@
+name: Feature
+description: Deliver one reviewable CERA capability
+title: 'feat: '
+labels:
+  - 'type:feature'
+body:
+  - type: input
+    id: feature-id
+    attributes:
+      label: Feature ID
+      placeholder: ENQ-401
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: User or operational outcome
+      description: State who benefits and what they can do after completion.
+    validations:
+      required: true
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] Given...
+        - [ ] When...
+        - [ ] Then...
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and contracts
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Risk
+      options:
+        - normal
+        - high-auth
+        - high-data
+        - high-migration
+        - high-release
+    validations:
+      required: true

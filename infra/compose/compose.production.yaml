@@ -1,0 +1,7 @@
+name: cera-production
+
+# Production uses the same application topology as staging. Database, Valkey,
+# Authentik and GlitchTip are attached through their approved production
+# overlays and private networks. Never add production secrets to this file.
+include:
+  - compose.staging.yaml
