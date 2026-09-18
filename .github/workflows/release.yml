@@ -81,4 +81,8 @@ jobs:
           IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}
         run: |
           ssh -i ~/.ssh/cera_deploy "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd /opt/cera && CERA_IMAGE_PREFIX='$IMAGE_PREFIX' bash infra/scripts/deploy.sh production '${{ github.sha }}'"
+            "cd /opt/cera && \
+             git fetch --prune --tags origin && \
+             git checkout --detach '${{ github.sha }}' && \
+             CERA_IMAGE_PREFIX='$IMAGE_PREFIX' \
+             bash infra/scripts/deploy.sh production '${{ github.sha }}'"

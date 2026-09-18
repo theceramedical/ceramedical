@@ -45,6 +45,7 @@ jobs:
 
   deploy:
     name: Deploy staging
+    if: ${{ vars.STAGING_DEPLOY_ENABLED == 'true' }}
     needs: images
     runs-on: ubuntu-latest
     environment: staging
